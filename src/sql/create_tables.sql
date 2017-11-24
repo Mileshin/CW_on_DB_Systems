@@ -1,4 +1,16 @@
 ---------------------------------------------------------
+-- Собственный тип, характеристик автобуса
+---------------------------------------------------------
+CREATE OR REPLACE TYPE CHARACTERISTICS_BUS_TYPE AS OBJECT
+( 	MAX_SPEED NUMBER,
+		WIDTH NUMBER,
+		HEIGHT NUMBER,
+		LENGTH NUMBER,
+		DOORS NUMBER,
+		CHASSIS_CONFIGURATION VARCHAR(10)
+	);
+/
+---------------------------------------------------------
 -- Типы автобусов
 ---------------------------------------------------------
 CREATE SEQUENCE type_buses_seq increment by 1 start with 1;
@@ -8,7 +20,7 @@ CREATE TABLE TYPES_OF_BUSES(
 		BRAND VARCHAR(256),
 		MODEL VARCHAR(256),
 		SEATS NUMBER NOT NULL,
-		CHARACTERISTICS CLOB,
+		CHARACTERISTICS CHARACTERISTICS_BUS_TYPE,
 		CONSTRAINT pk_type_buses PRIMARY KEY (ID)
 );
 
@@ -39,8 +51,6 @@ BEGIN
 END;
 /
 
-INSERT INTO POSITIONS(ID, NAME, ABB) VALUES(1,'Andrey Mileshin', 'M.A.A.');
-
 ---------------------------------------------------------
 --Люди
 ---------------------------------------------------------
@@ -59,7 +69,7 @@ CREATE TABLE PEOPLE(
 		POSITION NUMBER NOT NULL,
 		CONSTRAINT pk_people PRIMARY KEY (ID),
 		CONSTRAINT people_fk_position FOREIGN KEY (POSITION)
-		REFERENCES POSITIONS(ID) ON DELETE CASCADE
+		REFERENCES POSITIONS(ID)
 );
 
 CREATE OR REPLACE TRIGGER people_insert
@@ -72,16 +82,12 @@ END;
 ---------------------------------------------------------
 --Водители
 ---------------------------------------------------------
-
 CREATE SEQUENCE drivers_seq increment by 1 start with 1;
 
 CREATE TABLE DRIVERS(
 		ID NUMBER,
-		ID_PEOPLE NUMBER NOT NULL,
-		DRIVING_EXPERIENCE DATE NOT NULL,
-		DRIVING_LINENCE_NO NUMBER NOT NULL,
+		ID_PEOPLE NUMBER NOT NULL UNIQUE,
 		DATE_MEDICAL_CHECK_UP DATE NOT NULL,
-		CHARACTERISTIC CLOB,
 		VIOLATIONS CLOB,
 		CONSTRAINT pk_drivers PRIMARY KEY (ID),
 		CONSTRAINT drivers_fk_people FOREIGN KEY (ID_PEOPLE)
@@ -90,8 +96,33 @@ CREATE TABLE DRIVERS(
 
 CREATE OR REPLACE TRIGGER drivers_insert
 BEFORE INSERT ON DRIVERS FOR EACH ROW
+DECLARE
+   id_d NUMBER;
+   id_p NUMBER;
 BEGIN
-	SELECT drivers_seq.NEXTVAL INTO :NEW.ID  FROM dual;
+  SELECT POSITION INTO id_p FROM PEOPLE WHERE ID=:NEW.ID_PEOPLE;
+  SELECT ID INTO id_d FROM POSITIONS WHERE NAME='Водитель';
+  IF(id_d=id_p)
+  THEN
+      SELECT drivers_seq.NEXTVAL INTO :NEW.ID  FROM dual;
+  ELSE
+    RAISE_APPLICATION_ERROR(-20009, 'Это не водитель !!!');
+  END IF;
+END;
+/
+
+CREATE OR REPLACE TRIGGER drivers_update
+BEFORE UPDATE ON DRIVERS FOR EACH ROW
+DECLARE
+   id_d NUMBER;
+	 id_p NUMBER;
+BEGIN
+	SELECT POSITION INTO id_p FROM PEOPLE WHERE ID=:NEW.ID_PEOPLE;
+	SELECT ID INTO id_d FROM POSITIONS WHERE NAME='Водитель';
+	IF(id_d != id_p)
+	THEN
+			 RAISE_APPLICATION_ERROR(-20009, 'Это не водитель !!!');
+  END IF;
 END;
 /
 
@@ -102,23 +133,10 @@ END;
 CREATE SEQUENCE brigades_seq increment by 1 start with 1;
 
 CREATE TABLE BRIGADES(
-		ID NUMBER NOT NULL UNIQUE,
-		ID_DRIVER1 NUMBER NOT NULL,
-		ID_DRIVER2 NUMBER NOT NULL,
-		ID_CONDUCTOR1 NUMBER NOT NULL,
-		ID_CONDUCTOR2 NUMBER NOT NULL,
-		ID_MECHANIC NUMBER NOT NULL,
-        PRIMARY KEY(ID_DRIVER1, ID_DRIVER2, ID_CONDUCTOR1, ID_CONDUCTOR2, ID_MECHANIC),
-		CONSTRAINT brigades_fk_driver1 FOREIGN KEY (ID_DRIVER1)
-		REFERENCES DRIVERS(ID) ON DELETE CASCADE,
-		CONSTRAINT brigades_fk_driver2 FOREIGN KEY (ID_DRIVER2)
-		REFERENCES DRIVERS(ID) ON DELETE CASCADE,
-		CONSTRAINT brigades_fk_conductor1 FOREIGN KEY (ID_CONDUCTOR1)
-		REFERENCES PEOPLE(ID) ON DELETE CASCADE,
-		CONSTRAINT brigades_fk_conductor2 FOREIGN KEY (ID_CONDUCTOR2)
-		REFERENCES PEOPLE(ID) ON DELETE CASCADE,
-		CONSTRAINT brigades_fk_mechanic FOREIGN KEY (ID_MECHANIC)
-		REFERENCES PEOPLE(ID) ON DELETE CASCADE
+	ID NUMBER,
+	NAME VARCHAR(255),
+	EMBLEM BLOB,
+	CONSTRAINT pk_brigades PRIMARY KEY (ID)
 );
 
 CREATE OR REPLACE TRIGGER brigades_insert
@@ -157,9 +175,8 @@ CREATE SEQUENCE shedule_seq increment by 1 start with 1;
 CREATE TABLE SCHEDULE(
 		ID NUMBER,
 		ID_BRIGADE NUMBER NOT NULL,
-		START_WORK_SHIFT DATE,
-		STOP_WORK_SHIFT DATE,
-		LIST_OF_STATIONS CLOB,
+		START_WORK_SHIFT DATE  NOT NULL,
+		STOP_WORK_SHIFT DATE  NOT NULL,
 		CONSTRAINT pk_shedule PRIMARY KEY (ID),
 		CONSTRAINT shedule_fk_brigades FOREIGN KEY (ID_BRIGADE)
 		REFERENCES BRIGADES(ID) ON DELETE CASCADE
@@ -242,11 +259,91 @@ CREATE TABLE REPAIRS(
 		REFERENCES PEOPLE(ID) ON DELETE CASCADE
 );
 
+
 CREATE OR REPLACE TRIGGER repairs_insert
 BEFORE INSERT ON REPAIRS FOR EACH ROW
+DECLARE
+   id_d NUMBER;
+   id_p NUMBER;
 BEGIN
-	SELECT repairs_seq.NEXTVAL INTO :NEW.ID  FROM dual;
+  SELECT POSITION INTO id_p FROM PEOPLE WHERE ID=:NEW.ID_MECHANIC;
+  SELECT ID INTO id_d FROM POSITIONS WHERE NAME='Механик';
+  IF(id_d=id_p)
+  THEN
+      SELECT drivers_seq.NEXTVAL INTO :NEW.ID  FROM dual;
+  ELSE
+    RAISE_APPLICATION_ERROR(-20011, 'Это не механик !!!');
+  END IF;
 END;
 /
 
-exit;
+CREATE OR REPLACE TRIGGER repairs_update
+BEFORE UPDATE ON REPAIRS FOR EACH ROW
+DECLARE
+   id_d NUMBER;
+	 id_p NUMBER;
+BEGIN
+	SELECT POSITION INTO id_p FROM PEOPLE WHERE ID=:NEW.ID_MECHANIC;
+	SELECT ID INTO id_d FROM POSITIONS WHERE NAME='Механик';
+	IF(id_d != id_p)
+	THEN
+			 RAISE_APPLICATION_ERROR(-20011, 'Это не механик !!!');
+  END IF;
+END;
+/
+
+CREATE OR REPLACE TRIGGER people_update
+BEFORE UPDATE ON PEOPLE FOR EACH ROW
+DECLARE
+   id_d NUMBER;
+   id_p NUMBER;
+BEGIN
+	SELECT ID INTO id_d FROM POSITIONS WHERE NAME='Водитель';
+  select ID INTO id_p from DRIVERS where :NEW.ID=ID_PEOPLE;
+	IF((id_d != :NEW.POSITION) and (id_p >0))
+	THEN
+			 RAISE_APPLICATION_ERROR(-20010, 'Данная запись должна быть о водителе. Проверьте данные в таблице DRIVERS');
+  END IF;
+	SELECT ID INTO id_d FROM POSITIONS WHERE NAME='Механик';
+	IF((id_d != :NEW.POSITION) and (id_p >0))
+	THEN
+			 RAISE_APPLICATION_ERROR(-20012, 'Данная запись должна быть о механике. Проверьте данные в таблице DRIVERS');
+  END IF;
+END;
+/
+---------------------------------------------------------
+-- Водительские лицензии
+---------------------------------------------------------
+CREATE SEQUENCE driving_licence_seq increment by 1 start with 1;
+
+CREATE TABLE DRIVING_LICENCE(
+		ID NUMBER,
+		ID_DRIVER NUMBER NOT NULL,
+		ID_LICENCE NUMBER NOT NULL,
+		DATE_OF_ISSUANCE DATE NOT NULL,
+		VALID_UNTIL DATE NOT NULL,
+		CONSTRAINT pk_driving_licence PRIMARY KEY (ID),
+		CONSTRAINT driving_licence_fk_drivers FOREIGN KEY (ID_DRIVER)
+		REFERENCES DRIVERS(ID) ON DELETE CASCADE
+);
+
+CREATE OR REPLACE TRIGGER driving_licence_insert
+BEFORE INSERT ON DRIVING_LICENCE FOR EACH ROW
+BEGIN
+	SELECT driving_licence_seq.NEXTVAL INTO :NEW.ID  FROM dual;
+END;
+/
+
+---------------------------------------------------------
+-- связь брига и людей (реализация связи многие ко многим)
+---------------------------------------------------------
+
+CREATE TABLE BRIGADE_PEOPLE_LINK(
+		ID_BRIGADES NUMBER,
+		ID_PEOPLE NUMBER,
+		CONSTRAINT pk_BRIGADE_PEOPLE_LINK PRIMARY KEY (ID_BRIGADES,ID_PEOPLE),
+		CONSTRAINT BRIGADE_PEOPLE_LINK_fk_brigades FOREIGN KEY (ID_BRIGADES)
+		REFERENCES BRIGADES(ID) ON DELETE CASCADE,
+		CONSTRAINT BRIGADE_PEOPLE_LINK_fk_people FOREIGN KEY (ID_PEOPLE)
+		REFERENCES PEOPLE(ID) ON DELETE CASCADE
+);
