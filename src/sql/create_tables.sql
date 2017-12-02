@@ -2,12 +2,12 @@
 -- Собственный тип, характеристик автобуса
 ---------------------------------------------------------
 CREATE OR REPLACE TYPE CHARACTERISTICS_BUS_TYPE AS OBJECT
-( 	MAX_SPEED NUMBER,
+( 	FUEL_TANK NUMBER,
 		WIDTH NUMBER,
 		HEIGHT NUMBER,
 		LENGTH NUMBER,
-		DOORS NUMBER,
-		CHASSIS_CONFIGURATION VARCHAR(10)
+		DOORS VARCHAR(256),
+		ENGINE VARCHAR(256)
 	);
 /
 ---------------------------------------------------------
