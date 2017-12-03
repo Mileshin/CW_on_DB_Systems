@@ -32,5 +32,4 @@ DROP SEQUENCE type_buses_seq;
 ---------------------------------------------------------
 -- DROP TYPE
 ---------------------------------------------------------
-DROP TYPE NAME_TYPE;
 DROP TYPE CHARACTERISTICS_BUS_TYPE;

@@ -55,16 +55,13 @@ END;
 --Люди
 ---------------------------------------------------------
 
-CREATE OR REPLACE TYPE NAME_TYPE AS OBJECT
-(     SURNAME VARCHAR(128),
-    NAME VARCHAR(128),
-    MIDDLE_NAME VARCHAR(128));
-/
 CREATE SEQUENCE people_seq increment by 1 start with 1;
 
 CREATE TABLE PEOPLE(
     ID NUMBER,
-    NAME NAME_TYPE NOT NULL,
+		SURNAME VARCHAR(128)  NOT NULL,
+		NAME VARCHAR(128)  NOT NULL,
+		MIDDLE_NAME VARCHAR(128),
     DATE_OF_BIRTH DATE NOT NULL,
     POSITION NUMBER NOT NULL,
     CONSTRAINT pk_people PRIMARY KEY (ID),
@@ -134,7 +131,7 @@ CREATE SEQUENCE brigades_seq increment by 1 start with 1;
 
 CREATE TABLE BRIGADES(
   ID NUMBER,
-  NAME VARCHAR(255),
+  NAME VARCHAR(255) NOT NULL,
   EMBLEM BLOB,
   CONSTRAINT pk_brigades PRIMARY KEY (ID)
 );
@@ -319,7 +316,7 @@ CREATE SEQUENCE driving_licence_seq increment by 1 start with 1;
 CREATE TABLE DRIVING_LICENCE(
     ID NUMBER,
     ID_DRIVER NUMBER NOT NULL,
-    ID_LICENCE NUMBER NOT NULL,
+    ID_LICENCE NUMBER NOT NULL UNIQUE,
     DATE_OF_ISSUANCE DATE NOT NULL,
     VALID_UNTIL DATE NOT NULL,
     CONSTRAINT pk_driving_licence PRIMARY KEY (ID),
@@ -335,7 +332,7 @@ END;
 /
 
 ---------------------------------------------------------
--- связь брига и людей (реализация связи многие ко многим)
+-- связь бригад и людей (реализация связи многие ко многим)
 ---------------------------------------------------------
 
 CREATE TABLE BRIGADE_PEOPLE_LINK(
