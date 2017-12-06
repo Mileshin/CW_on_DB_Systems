@@ -1,3 +1,16 @@
+delete from BRIGADE_PEOPLE_LINK;
+delete from DRIVING_LICENCE;
+delete from  REPAIRS;
+delete from  BREAKDOWN;
+delete from BUSES;
+delete from SCHEDULE;
+delete from ROUTES;
+delete from BRIGADES;
+delete from DRIVERS;
+delete from PEOPLE;
+delete from POSITIONS;
+delete from TYPES_OF_BUSES;
+
 ---------------------------------------------------------
 -- Типы автобусов
 ---------------------------------------------------------
@@ -174,37 +187,37 @@ select 'к215оу', tb.id, b.id, r.id, to_date('13-11-2017', 'dd-mm-yyyy')
 ---------------------------------------------------------
 --Поломки
 ---------------------------------------------------------
-insert into BREAKDOWN (ID_BUS, DATA_BREAKDOWN, DESCRIPTION)
+insert into BREAKDOWN (ID_BUS, DATE_BREAKDOWN, DESCRIPTION)
   select id,  to_date('13-06-2017', 'dd-mm-yyyy'), 'Разбито стекло'
   from buses where NUMBER_PLATE='к345кк';
 
-insert into BREAKDOWN (ID_BUS, DATA_BREAKDOWN, DESCRIPTION)
+insert into BREAKDOWN (ID_BUS, DATE_BREAKDOWN, DESCRIPTION)
   select id,  to_date('03-08-2017', 'dd-mm-yyyy'), 'Откаали тормоза'
   from buses where NUMBER_PLATE='о355кк';
 
-insert into BREAKDOWN (ID_BUS, DATA_BREAKDOWN, DESCRIPTION)
+insert into BREAKDOWN (ID_BUS, DATE_BREAKDOWN, DESCRIPTION)
   select id,  to_date('10-09-2017', 'dd-mm-yyyy'), 'Не работают дворники'
   from buses where NUMBER_PLATE='к215оу';
 
 ---------------------------------------------------------
 --Ремонт
 ---------------------------------------------------------
-INSERT INTO REPAIRS(ID_BREAKDOWN,START_DATA,END_DATE,ID_MECHANIC,CONCLUSION)
+INSERT INTO REPAIRS(ID_BREAKDOWN,START_DATE,END_DATE,ID_MECHANIC,CONCLUSION)
 SELECT B.ID, to_date('13-06-2017', 'dd-mm-yyyy'), to_date('13-06-2017', 'dd-mm-yyyy'),
 P.ID, 'И так сойдет!' FROM BREAKDOWN B, PEOPLE P
-WHERE B.DATA_BREAKDOWN=to_date('13-06-2017', 'dd-mm-yyyy') AND
+WHERE B.DATE_BREAKDOWN=to_date('13-06-2017', 'dd-mm-yyyy') AND
 P.SURNAME='Хазанович';
 
-INSERT INTO REPAIRS(ID_BREAKDOWN,START_DATA,END_DATE,ID_MECHANIC,CONCLUSION)
+INSERT INTO REPAIRS(ID_BREAKDOWN,START_DATE,END_DATE,ID_MECHANIC,CONCLUSION)
 SELECT B.ID, to_date('03-08-2017', 'dd-mm-yyyy'), to_date('07-08-2017', 'dd-mm-yyyy'),
 P.ID, 'И так сойдет!' FROM BREAKDOWN B, PEOPLE P
-WHERE B.DATA_BREAKDOWN=to_date('03-08-2017', 'dd-mm-yyyy') AND
+WHERE B.DATE_BREAKDOWN=to_date('03-08-2017', 'dd-mm-yyyy') AND
 P.SURNAME='Клюквин';
 
-INSERT INTO REPAIRS(ID_BREAKDOWN,START_DATA,END_DATE,ID_MECHANIC,CONCLUSION)
+INSERT INTO REPAIRS(ID_BREAKDOWN,START_DATE,END_DATE,ID_MECHANIC,CONCLUSION)
 SELECT B.ID, to_date('10-09-2017', 'dd-mm-yyyy'), to_date('10-09-2017', 'dd-mm-yyyy'),
 P.ID, 'И так сойдет!' FROM BREAKDOWN B, PEOPLE P
-WHERE B.DATA_BREAKDOWN=to_date('10-09-2017', 'dd-mm-yyyy') AND
+WHERE B.DATE_BREAKDOWN=to_date('10-09-2017', 'dd-mm-yyyy') AND
 P.SURNAME='Заборовский';
 
 ---------------------------------------------------------
