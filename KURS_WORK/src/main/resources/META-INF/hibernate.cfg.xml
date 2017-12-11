@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+    <session-factory>
+        <property name="hibernate.connection.driver_class">oracle.jdbc.driver.OracleDriver</property>
+        <property name="hibernate.connection.url">jdbc:oracle:thin:@//localhost:1522/ORCL</property>
+        <property name="hibernate.connection.username">testuser</property>
+        <property name="hibernate.connection.password">gvinbleid</property>
+        <property name="hibernate.dialect">org.hibernate.dialect.Oracle12cDialect</property>
+        <property name="hibernate.default_schema">TESTUSER</property>
+       <!-- <property name="show_sql">true</property>-->
+        <mapping class="kur_entity.PositionsEntity"/>
+        <mapping class="kur_entity.PeopleEntity"/>
+        <mapping class="kur_entity.DriversEntity"/>
+        <mapping class="kur_entity.BrigadesEntity"/>
+        <mapping class="kur_entity.RotesEntity"/>
+        <mapping class="kur_entity.SheduleEntity"/>
+        <mapping class="kur_entity.BusesEntity"/>
+        <mapping class="kur_entity.BreakdownEntity"/>
+        <mapping class="kur_entity.RepairsEntity"/>
+        <mapping class="kur_entity.DrivingLicenceEntity"/>
+        <mapping class="kur_entity.TypesOfBusesEntity"/>
+    </session-factory>
+</hibernate-configuration>
+
