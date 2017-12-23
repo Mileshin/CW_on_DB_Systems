@@ -30,21 +30,25 @@ public class Main {
 
         while(true) {
             int command = getCommand();
-            int table = getTable();
-            if(table == TABLESCOUNT) continue;
-            switch (command){
-                case 1:
-                    createMethod(table);
-                    break;
-                case 2:
-                    readMethod(table);
-                    break;
-                case 3:
-                    updateMethod(table);
-                    break;
-                case 4:
-                    deleteMethod(table);
-                    break;
+            if(command != 5) {
+                int table = getTable();
+                if (table == TABLESCOUNT) continue;
+                switch (command) {
+                    case 1:
+                        createMethod(table);
+                        break;
+                    case 2:
+                        readMethod(table);
+                        break;
+                    case 3:
+                        updateMethod(table);
+                        break;
+                    case 4:
+                        deleteMethod(table);
+                        break;
+                }
+            } else {
+                packageMethod();
             }
         }
     }
@@ -104,9 +108,15 @@ public class Main {
                 entity = null;
         }
         if (entity != null) {
-            entityManager.getTransaction().begin();
-            entityManager.persist(entity);
-            entityManager.getTransaction().commit();
+            try {
+                entityManager.getTransaction().begin();
+                entityManager.persist(entity);
+                entityManager.getTransaction().commit();
+            }
+            catch (  Exception ex) {
+                System.out.println("EXCEPTIION: " + ex.getMessage());
+                entityManager.getTransaction().rollback();
+            }
         }
     }
 
@@ -130,13 +140,13 @@ public class Main {
         int pk;
         System.out.println("Введите id");
         while(true) {
-            try {
+            if (sc.hasNextInt()) {
                 pk = sc.nextInt();
-            }catch(Exception e){
-                System.out.println("Введите корректный id");
-                continue;
+                break;
             }
-            break;
+            else{
+                System.out.println("Введите корректный id");
+            }
         }
 
 
@@ -158,58 +168,64 @@ public class Main {
             return;
         }
 
-        entityManager.getTransaction().begin();
-        hql="UPDATE "+tables.get(n)+"Entity AS c SET ";
-        for (Field field : myObject.getClass().getDeclaredFields()) {
-            field.setAccessible(true);
-            if(!field.getName().equals("id") && !field.getName().equals("CHARACTERISTICS"))
-                hql+=field.getName()+" = :"+field.getName()+field.getName()+", ";
-        }
-        hql=hql.substring(0,hql.length()-2);
-        hql+=" WHERE c.id = :p";
-        //Query query2 = entityManager.createQuery("UPDATE "+tables.get(n)+"Entity c SET c.name = :newname WHERE c.id = :p");
-        Query query2 = entityManager.createQuery(hql);
-        sc.nextLine();
-        for (Field field : myObject.getClass().getDeclaredFields()) {
-            field.setAccessible(true);
-            if(!field.getName().equals("id") && !field.getName().equals("CHARACTERISTICS")) {
-                String type = field.getType().getSimpleName();
-                System.out.println("Введите "+field.getName());
-                if (type.equals("int")) {
-                    query2.setParameter(field.getName() + field.getName(), sc.nextInt());
-                    sc.nextLine();
-                }
-                if (type.equals("String"))
-                    query2.setParameter(field.getName() + field.getName(), sc.nextLine());
-                if (type.equals("Date") && n!=6) {
-                    DateFormat format = new SimpleDateFormat("MMMM d, yyyy", Locale.ENGLISH);
-                    Date date = format.parse(sc.nextLine());
-                    query2.setParameter(field.getName() + field.getName(), date);
-                }
-                if (type.equals("Date") && n==6) {
-                    DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.ENGLISH);
-                    Date date = format.parse(sc.nextLine());
-                    query2.setParameter(field.getName() + field.getName(), date);
+        try {
+            entityManager.getTransaction().begin();
+            hql = "UPDATE " + tables.get(n) + "Entity AS c SET ";
+            for (Field field : myObject.getClass().getDeclaredFields()) {
+                field.setAccessible(true);
+                if (!field.getName().equals("id") && !field.getName().equals("CHARACTERISTICS"))
+                    hql += field.getName() + " = :" + field.getName() + field.getName() + ", ";
+            }
+            hql = hql.substring(0, hql.length() - 2);
+            hql += " WHERE c.id = :p";
+            //Query query2 = entityManager.createQuery("UPDATE "+tables.get(n)+"Entity c SET c.name = :newname WHERE c.id = :p");
+            Query query2 = entityManager.createQuery(hql);
+            sc.nextLine();
+            for (Field field : myObject.getClass().getDeclaredFields()) {
+                field.setAccessible(true);
+                if (!field.getName().equals("id") && !field.getName().equals("CHARACTERISTICS")) {
+                    String type = field.getType().getSimpleName();
+                    System.out.println("Введите " + field.getName());
+                    if (type.equals("int")) {
+                        query2.setParameter(field.getName() + field.getName(), sc.nextInt());
+                        sc.nextLine();
+                    }
+                    if (type.equals("String"))
+                        query2.setParameter(field.getName() + field.getName(), sc.nextLine());
+                    if (type.equals("Date") && n != 6) {
+                        DateFormat format = new SimpleDateFormat("MMMM d, yyyy", Locale.ENGLISH);
+                        Date date = format.parse(sc.nextLine());
+                        query2.setParameter(field.getName() + field.getName(), date);
+                    }
+                    if (type.equals("Date") && n == 6) {
+                        DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.ENGLISH);
+                        Date date = format.parse(sc.nextLine());
+                        query2.setParameter(field.getName() + field.getName(), date);
+                    }
                 }
             }
-        }
 
-        query2.setParameter("p",pk);
-        int updateCount = query2.executeUpdate();
-        System.out.println(updateCount);
-        entityManager.getTransaction().commit();
+            query2.setParameter("p", pk);
+            int updateCount = query2.executeUpdate();
+            System.out.println(updateCount);
+            entityManager.getTransaction().commit();
+        }
+        catch (  Exception ex) {
+            System.out.println("EXCEPTIION: " + ex.getMessage());
+            entityManager.getTransaction().rollback();
+        }
     }
     private static void deleteMethod(Integer n) throws SQLException {
         int pk;
         System.out.println("Введите primary key");
         while(true) {
-            try {
+            if (sc.hasNextInt()){
                 pk = sc.nextInt();
-            }catch(Exception e){
+                break;
+            }else {
                 System.out.println("Введите корректный primary key");
-                continue;
             }
-            break;
+
         }
 
         Object entity;
@@ -254,12 +270,113 @@ public class Main {
         }
 
         if (entity != null) {
-            entityManager.getTransaction().begin();
-            entityManager.remove(entity);
-            entityManager.getTransaction().commit();
+            try {
+                entityManager.getTransaction().begin();
+                entityManager.remove(entity);
+                entityManager.getTransaction().commit();
+            }
+            catch (  Exception ex) {
+                System.out.println("EXCEPTIION: " + ex.getMessage());
+                entityManager.getTransaction().rollback();
+            }
         }
 
     }
+
+    private static void packageMethod() throws IllegalAccessException, SQLException {
+        System.out.println("Выберите процедуру:");
+        System.out.println("1 Add position.");
+        System.out.println("2 Delete position.");
+        System.out.println("3 Delete position.");
+
+        int i;
+        while(true) {
+           if (sc.hasNextInt()){
+               i = sc.nextInt();
+               if (i<1 || i>3){
+                   System.out.println("Введите корректный номер");
+               }
+               else {
+                   break;
+               }
+            }else {
+                System.out.println("Введите корректный номер");
+            }
+        }
+        try {
+            switch (i) {
+                case 1: {
+                    StoredProcedureQuery query = entityManager.createStoredProcedureQuery("bus_deport_pkg.addPOSITIONS");
+                    query.registerStoredProcedureParameter("new_name", String.class, ParameterMode.IN);
+                    query.registerStoredProcedureParameter("new_abb", String.class, ParameterMode.IN);
+                    query.registerStoredProcedureParameter("new_id", Integer.class, ParameterMode.OUT);
+                    sc.nextLine();
+                    System.out.println("name:");
+                    String new_name = sc.nextLine();
+                    System.out.println("abbreviation:");
+                    String new_abb = sc.nextLine();
+                    query.setParameter("new_name", new_name);
+                    query.setParameter("new_abb", new_abb);
+                    query.execute();
+                    int newID = (Integer) query.getOutputParameterValue("new_id");
+                    System.out.println("Новый ID: "+newID);
+                }
+                break;
+                case 2: {
+                    StoredProcedureQuery query = entityManager.createStoredProcedureQuery("bus_deport_pkg.deletePOSITIONS");
+                    query.registerStoredProcedureParameter("del_id", Integer.class, ParameterMode.IN);
+                    System.out.println("id:");
+                    int del_id = sc.nextInt();
+                    query.setParameter("del_id", del_id);
+                    query.execute();
+                }
+                break;
+                case 3:
+                {
+                    StoredProcedureQuery query = entityManager.createStoredProcedureQuery("bus_deport_pkg.addDRIVER_AND_PERSON");
+                    query.registerStoredProcedureParameter("new_surname", String.class, ParameterMode.IN);
+                    query.registerStoredProcedureParameter("new_name", String.class, ParameterMode.IN);
+                    query.registerStoredProcedureParameter("new_middle_name", String.class, ParameterMode.IN);
+                    query.registerStoredProcedureParameter("new_DATE_OF_BIRTH", Date.class, ParameterMode.IN);
+                    query.registerStoredProcedureParameter("new_DATE_MEDICAL_CHECK_UP", Date.class, ParameterMode.IN);
+                    query.registerStoredProcedureParameter("new_VIOLATIONS", String.class, ParameterMode.IN);
+                    query.registerStoredProcedureParameter("new_id", Integer.class, ParameterMode.OUT);
+                    sc.nextLine();
+                    DateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+                    System.out.println("Suname:");
+                    String new_surname = sc.nextLine();
+                    System.out.println("Name:");
+                    String new_name = sc.nextLine();
+                    System.out.println("Middle name:");
+                    String new_middle_name = sc.nextLine();
+                    System.out.println("Date of birth (fomat \"yyyy-MM-dd\"):");
+                    Date new_DATE_OF_BIRTH = format.parse(sc.nextLine());
+                    System.out.println("Date of medical check up (fomat \"yyyy-MM-dd\"):");
+                    Date new_DATE_MEDICAL_CHECK_UP = format.parse(sc.nextLine());
+                    System.out.println("Violations:");
+                    String new_VIOLATIONS = sc.nextLine();
+
+                    query.setParameter("new_surname", new_surname);
+                    query.setParameter("new_name", new_name);
+                    query.setParameter("new_middle_name", new_middle_name);
+                    query.setParameter("new_DATE_OF_BIRTH", new_DATE_OF_BIRTH);
+                    query.setParameter("new_DATE_MEDICAL_CHECK_UP", new_DATE_MEDICAL_CHECK_UP);
+                    query.setParameter("new_VIOLATIONS", new_VIOLATIONS);
+                    query.execute();
+                    int newID = (Integer) query.getOutputParameterValue("new_id");
+                    System.out.println("Новый ID: "+newID);
+                }
+                break;
+                default:
+                    break;
+            }
+        }
+        catch (  Exception ex) {
+            System.out.println("При выполнении процедуры произошла ошибка.");
+            System.out.println("EXCEPTIION: " + ex.getMessage());
+        }
+    }
+
 
     private static  void addNames(){
         tables.add("");
@@ -280,49 +397,50 @@ public class Main {
         commands.add("Read");
         commands.add("Update");
         commands.add("Delete");
+        commands.add("Package");
     }
 
 
     private static int getCommand() {
         System.out.println("Выберете команду:");
-        for(int a=1;a<5;a++)
+        for(int a=1;a<6;a++)
             System.out.println(a+". "+commands.get(a));
         int i=0;
         while(true) {
-            try {
+            if (sc.hasNextInt()){
                 i = sc.nextInt();
+                //sc.nextLine();
+                if (i < 1 || i > 5) {
+                    System.out.println("Вы ввели неверный номер команды");
+                } else {
+                    break;
+                }
             }
-            catch (Exception e){
+            else
                 System.out.println("Введите корректный номер команды");
-                continue;
+                sc.nextLine();
             }
-            if (i < 1 || i > 4) {
-                System.out.println("Вы ввели неверный номер команды");
-            } else {
-                break;
-            }
-        }
         return i;
     }
 
     private static int getTable(){
+        sc.nextLine();
         System.out.println("Выберете Таблицу:");
         for(int a=1;a<TABLESCOUNT;a++)
             System.out.println(a+". "+tables.get(a));
         System.out.println(TABLESCOUNT+". Вернуться к выбору команды");
         int i=0;
-        while(true) {
-            try {
+        while (true){
+            if (sc.hasNextInt()){
                 i = sc.nextInt();
-            }
-            catch (Exception e){
-                System.out.println("Введите корректный номер таблицы");
-                continue;
-            }
-            if (i < 1 || i > TABLESCOUNT) {
-                System.out.println("Вы ввели неверный номер таблицы");
+                if (i < 1 || i > TABLESCOUNT) {
+                    System.out.println("Вы ввели неверный номер таблицы");
+                } else {
+                    break;
+                }
             } else {
-                break;
+                System.out.println("Введите корректный номер таблицы");
+                sc.nextLine();
             }
         }
         return i;
