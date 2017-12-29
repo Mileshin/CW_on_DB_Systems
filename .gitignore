@@ -1,3 +1,5 @@
+#node_modules
+mongoapp/node_modules
 #target
 KURS_WORK/target
 
