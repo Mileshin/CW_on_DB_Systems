@@ -1,8 +1,8 @@
 var mongoose = require('mongoose');
 var table = 'buses';
 var schema = mongoose.Schema({
-  number_plate: {type: String, required: true},
-	vehicle_inspection_date: {type: Date, required: true},
+  number_plate: {type: String, required: true, unique: true,},
+	vehicle_inspection_date: {type: String, required: true},
   working_status: {type: Boolean, required: true},
 	types_of_buses: {
 		brand: {type: String, required: false},
