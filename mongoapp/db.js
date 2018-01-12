@@ -2,7 +2,7 @@
 var mongoose = require('mongoose');
 var schemas = require('./schemas');
 mongoose.Promise = require('bluebird');
-mongoose.connect("mongodb://localhost:27017/coursewok",  { useMongoClient: true });
+mongoose.connect("mongodb://localhost:27017/coursework",  { useMongoClient: true });
 var db = mongoose.connection;
 
 var pl = new schemas.people.model;

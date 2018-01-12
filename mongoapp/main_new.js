@@ -3,7 +3,7 @@ var schemas = require('./schemas');
 
 var options = { promiseLibrary: require('bluebird') };
 mongoose.Promise = require('bluebird');
-mongoose.connect("mongodb://localhost:27017/coursewok",  { useMongoClient: true });
+mongoose.connect("mongodb://localhost:27017/coursework",  { useMongoClient: true });
 var db = mongoose.connection;
 
 const rl = require('readline-sync');
