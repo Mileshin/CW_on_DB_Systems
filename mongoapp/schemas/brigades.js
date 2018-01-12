@@ -2,7 +2,7 @@ var mongoose = require('mongoose');
 var table = 'brigades';
 var schema = mongoose.Schema({
   name: {type: String, required: true},
-	emblem: {type: Buffer},
+	emblem: {type: Buffer, required: false},
 });
 
 module.exports = {
