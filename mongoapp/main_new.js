@@ -31,10 +31,63 @@ var funcs = {
 		var query = {};
 		query[field] = value;
 		 schema.model.findOne(query, function(err, row){
-			if(err) return console.log(err);
+			console.log(err);
 			var model = fill_fields(schema, row);
 			console.log(model);
-			row.save((err) => print_errors(err));
+			model.save((err) => print_errors(err));
+		});
+	},
+	'update2': function(splitted_input) {
+		var schema = get_schema_by_name(splitted_input[1]);
+		var field = get_unique_field(schema);
+		var value = rl.question("   " + field + " = ");
+		var query = {};
+		query[field] = value;
+		 schema.model.findById("5a63590cd4b5542e74501f04", function(err, row){
+			if(err) return console.log(err);
+			var props = Object.keys(schema.schema.paths);
+			//console.log(props);
+			var test = {};
+			props.forEach(function(field, i, arr) {
+				if( field[0] != '_'){
+					if( field.match(/\./) ){
+						/*var nested = field.split(".");
+						var nested_head = nested[0];
+						var nested_field = nested[1];
+						row[nested_head][nested_field] = rl.question("   " + field + " = ");*/
+					}else{
+					 var str = rl.question("   " + field + " = ");
+						test[field] = str;
+					}
+				}
+			});
+			console.log(test);
+			row.set(test);
+		/*	schema.schema.eachPath(function(field) {
+				if( field[0] != '_'){
+					var test = {};
+					if( field.match(/\./) ){
+						/*var nested = field.split(".");
+						var nested_head = nested[0];
+						var nested_field = nested[1];
+						row[nested_head][nested_field] = rl.question("   " + field + " = ");
+					}else{
+						test[field] = rl.question("   " + field + " = ");
+						console.log(test);
+						row.set(test);
+					}
+				}
+			});*/
+			//row.vehicle_inspection_date='2016-09-01';
+			//row.working_status=true;
+			//row.number_plate=121;
+			/*row.set({ number_plate: '121',
+  vehicle_inspection_date: '1998-09-09',
+  working_status: 'true' });*/
+			row.save(function(err) {
+				if(err) return console.log(err);
+			});
+			console.log(row);
 		});
 	},
 	'delete': function(splitted_input) {

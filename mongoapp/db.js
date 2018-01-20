@@ -1,4 +1,3 @@
-// getting-started.js
 var mongoose = require('mongoose');
 var schemas = require('./schemas');
 mongoose.Promise = require('bluebird');
