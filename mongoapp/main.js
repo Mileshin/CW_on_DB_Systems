@@ -3,7 +3,7 @@ var schemas = require('./schemas');
 
 var options = { promiseLibrary: require('bluebird') };
 mongoose.Promise = require('bluebird');
-mongoose.connect("mongodb://localhost:27017/cousewok");
+mongoose.connect("mongodb://localhost:27017/coursework",  { useMongoClient: true });
 var db = mongoose.connection;
 
 const rl = require('readline-sync');
@@ -16,27 +16,14 @@ var funcs = {
 		console.log(model);
 		model.save((err) => print_errors(err));
 	},
-	/*'read': function(splitted_input) {
-		var key = splitted_input.toString();
-		cache.get(key, function (err, value) {
-			if (err) throw err;
-			if( value == null ){
-				var schema = get_schema_by_name(splitted_input[1]);
-				if(schema == null) return;
-				schema.model.find({}).exec(function(err, row){
-					cache.set(key, row, function (err, value) {
-						if (err) throw err;
-						console.log(value);
-						console.log("added to cache");
-					});
-				});
-			}else{
-				console.log(value);
-				console.log("cached");
-			}
-		});
-
-	},*/
+	'read': function(splitted_input) {
+		var schema = get_schema_by_name(splitted_input[1]);
+		if(schema == null) return;
+		schema.model.find({}).exec(function(err, docs){
+			if(err) return console.log(err);
+			console.log(docs)
+			});
+		},
 	'update': function(splitted_input) {
 		var schema = get_schema_by_name(splitted_input[1]);
 		var field = get_unique_field(schema);
@@ -44,30 +31,88 @@ var funcs = {
 		var query = {};
 		query[field] = value;
 		 schema.model.findOne(query, function(err, row){
-			console.log(err);
+			if(err) return console.log(err);
 			var model = fill_fields(schema, row);
 			console.log(model);
 			model.save((err) => print_errors(err));
 		});
 	},
-	'delete': function(splitted_input) {
+	'update2': function(splitted_input) {
 		var schema = get_schema_by_name(splitted_input[1]);
 		var field = get_unique_field(schema);
 		var value = rl.question("   " + field + " = ");
 		var query = {};
 		query[field] = value;
+		 schema.model.findById("5a63590cd4b5542e74501f04", function(err, row){
+			if(err) return console.log(err);
+			var props = Object.keys(schema.schema.paths);
+			//console.log(props);
+			var test = {};
+			props.forEach(function(field, i, arr) {
+				if( field[0] != '_'){
+					if( field.match(/\./) ){
+						/*var nested = field.split(".");
+						var nested_head = nested[0];
+						var nested_field = nested[1];
+						row[nested_head][nested_field] = rl.question("   " + field + " = ");*/
+					}else{
+					 var str = rl.question("   " + field + " = ");
+						test[field] = str;
+					}
+				}
+			});
+			console.log(test);
+			row.set(test);
+		/*	schema.schema.eachPath(function(field) {
+				if( field[0] != '_'){
+					var test = {};
+					if( field.match(/\./) ){
+						/*var nested = field.split(".");
+						var nested_head = nested[0];
+						var nested_field = nested[1];
+						row[nested_head][nested_field] = rl.question("   " + field + " = ");
+					}else{
+						test[field] = rl.question("   " + field + " = ");
+						console.log(test);
+						row.set(test);
+					}
+				}
+			});*/
+			//row.vehicle_inspection_date='2016-09-01';
+			//row.working_status=true;
+			//row.number_plate=121;
+			/*row.set({ number_plate: '121',
+  vehicle_inspection_date: '1998-09-09',
+  working_status: 'true' });*/
+			row.save(function(err) {
+				if(err) return console.log(err);
+			});
+			console.log(row);
+		});
+	},
+	'delete': function(splitted_input) {
+		var schema = get_schema_by_name(splitted_input[1]);
+		if(schema == null) return;
+		var field = get_unique_field(schema);
+		var value = rl.question("   " + field + " = ");
+		var query = {};
+		query[field] = value;
 		 schema.model.findOne(query, function(err, row){
-			console.log(err);
+			if(err) return console.log(err);
 			row.remove((err) => print_errors(err));
 		});
 	},
 	'help': function(splitted_input) {
 		for(key in funcs){
-			console.log(key);
+			if(key=='add' || key=='read' || key=='update' || key=='delete')
+			console.log(key + ' <schema_name>');
+			else {
+				console.log(key);
+			}
 		}
 	},
 	'quit': function(){
-		process.exit(0);
+		process.exit(1);
 	}
 }
 
@@ -85,7 +130,7 @@ function run(){
 
 run();
 setTimeout(function(){
-	console.log('>');
+console.log('enter the command:');
 	process.exit(0);
 }, 1000);
 
@@ -95,7 +140,6 @@ setTimeout(function(){
 
 function fill_fields(schema, model) {
 	if( model == null ) model = new schema.model;
-
 	schema.schema.eachPath((field) => {
 		if( field[0] != '_' ){
 			if( field.match(/\./) ){
@@ -108,6 +152,36 @@ function fill_fields(schema, model) {
 	});
 	return model;
 }
+
+function fill_fields2(schema) {
+  moddd ={};
+	schema.schema.eachPath((field) => {
+		if( field[0] != '_' ){
+			var per;
+			if( field.match(/\./) ){
+			/*	per = rl.question("   " + field + " = ");
+				if (per !== null && per !== ''){
+				var nested = field.split(".");
+				var nested_head = nested[0];
+				var nested_field = nested[1];
+					console.log(per);
+					moddd[nested_head][nested_field] = per;
+				}*/
+
+			}else {
+				per = rl.question("   " + field + " = ");
+				if (per !== null && per !== ''){
+					console.log(per);
+					moddd[field] = per;
+				}
+
+			}
+		}
+	});
+	return moddd;
+}
+
+
 
 function get_unique_field(schema) {
 	var tree = schema.schema.tree;
