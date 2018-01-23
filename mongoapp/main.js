@@ -1,8 +1,7 @@
 var mongoose = require('mongoose');
 var schemas = require('./schemas');
 
-var options = { promiseLibrary: require('bluebird') };
-mongoose.Promise = require('bluebird');
+mongoose.Promise = global.Promise;
 mongoose.connect("mongodb://localhost:27017/coursework",  { useMongoClient: true });
 var db = mongoose.connection;
 
@@ -29,17 +28,24 @@ var funcs = {
 		'findById': function(splittedIinput) {
 			var schema = getSchemaByName(splittedIinput[1]);
 			if(schema == null) return;
-			schema.model.find({}).exec(function(err, docs){
+			var id = rl.question("   _id = ");
+			schema.model.findById(id, function(err, docs){
 				if(err) return console.log(err);
 				console.log(docs)
 				});
 			},
 	'update': function(splittedIinput) {
 		var schema = getSchemaByName(splittedIinput[1]);
+		if(schema == null) return;
 		var field = getUniqueField(schema);
-		var value = rl.question("   " + field + " = ");
-		var query = {};
-		query[field] = value;
+		var opt = rl.question("1: search by unique field\n2: search by _id\n");
+		if(opt==1){
+			var value = rl.question("   " + field + " = ");
+			var query = {};
+			query[field] = value;
+		} else {
+				var value = rl.question("   _id = ");
+			}
 		var props = Object.keys(schema.schema.paths);
 		var newFields = {};
 		props.forEach(function(field, i, arr) {
@@ -48,7 +54,6 @@ var funcs = {
 					var nested = field.split(".");
 					var nestedHead = nested[0];
 					var nestedField = nested[1];
-					console.log(nestedHead, nestedField);
 					if(!newFields[nestedHead]) newFields[nestedHead] = {};
 					newFields[nestedHead][nestedField] = rl.question("   " + field + " = ");
 				}else{
@@ -57,28 +62,48 @@ var funcs = {
 				}
 			}
 		});
-		console.log(newFields);
-		 schema.model.findOneAndUpdate(query, newFields, function(err, row){
+		if(opt==1){
+			schema.model.findOneAndUpdate(query, newFields, {new: true}, function(err, doc){
+ 				if(err) return console.log(err);
+				console.log("new document\n", doc);
+ 		});
+	} else {
+		schema.model.findByIdAndUpdate(value, newFields, {new: true}, function(err, doc){
 			if(err) return console.log(err);
+			console.log("new document", doc);
 		});
+
+	}
+
 	},
 	'delete': function(splittedIinput) {
 		var schema = getSchemaByName(splittedIinput[1]);
 		if(schema == null) return;
 		var field = getUniqueField(schema);
-		var value = rl.question("   " + field + " = ");
-		var query = {};
-		query[field] = value;
-		 schema.model.findOne(query, function(err, row){
-			if(err) return console.log(err);
-			row.remove(function(err){
-			if(err) return console.log(err);
+		var opt = rl.question("1: remove by unique field\n2: remove by _id\n");
+		if(opt==1){
+			var value = rl.question("   " + field + " = ");
+			var query = {};
+			query[field] = value;
+			schema.model.findOne(query, function(err, doc){
+ 				if(err) return console.log(err);
+ 				doc.remove(function(err){
+ 					if(err) return console.log(err);
+					console.log("Deleted document ", doc);
+ 				});
+ 			});
+		} else {
+			var id = rl.question("   _id = ");
+			schema.model.findByIdAndRemove(id, function(err, doc){
+    		if(err) return console.log(err);
+    		console.log("Deleted document ", doc);
 			});
-		});
+		}
+
 	},
 	'help': function(splittedIinput) {
 		for(key in funcs){
-			if(key=='add' || key=='read' || key=='update' || key=='delete')
+			if(key!='quit' && key!='help')
 			console.log(key + ' <schema_name>');
 			else {
 				console.log(key);
@@ -89,7 +114,6 @@ var funcs = {
 		process.exit(1);
 	}
 }
-
 
 db.on('error', console.error.bind(console, 'connection error:'));
 
